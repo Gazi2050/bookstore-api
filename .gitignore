@@ -1,0 +1,27 @@
+# Node.js modules
+node_modules/
+
+# TypeScript build output
+dist/
+build/
+
+# Logs
+*.log
+
+# Environment variable
+.env
+.env.local
+
+# PostgreSQL
+*.sql
+*.sqlite
+
+# IDE files (for common editors like VSCode)
+.vscode/
+.idea/
+
+
+# NPM Debug log
+npm-debug.log
+yarn-debug.log
+yarn-error.log
