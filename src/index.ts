@@ -3,6 +3,8 @@ import knex from 'knex';
 import dotenv from 'dotenv';
 import { body, validationResult } from 'express-validator';
 import { ErrorRequestHandler } from 'express';
+import swaggerJSDoc from 'swagger-jsdoc';
+import swaggerUi from 'swagger-ui-express';
 
 // Load environment variables
 dotenv.config();
@@ -45,25 +47,28 @@ const validate = (validations: ReturnType<typeof body>[]) => {
 };
 
 // Custom error handler middleware
-const errorHandler: ErrorRequestHandler = (err, req, res) => {
+const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+    console.error('Error Handler Invoked:');
     console.error('Error:', err.message);
     console.error('Stack:', err.stack);
+    console.error('Request URL:', req.originalUrl);
+    console.error('Request Method:', req.method);
 
     const statusCode = (err as ApiError).statusCode || 500;
     const message = statusCode === 500 ? 'Internal Server Error' : err.message;
 
-    // Make sure res is a valid express Response object before calling methods on it
     if (res && typeof res.status === 'function') {
         res.status(statusCode).json({
             error: message
         });
     } else {
         console.error('Invalid response object in error handler');
-        // If we can't respond, we need to do something else
         if (process.env.NODE_ENV !== 'production') {
             console.error('Response object:', res);
         }
     }
+
+    next();
 };
 
 // Create a custom error class
@@ -78,12 +83,58 @@ class HttpError extends Error {
     }
 }
 
-// Welcome Route - Added for better UX
+// Swagger configuration
+const swaggerOptions = {
+    definition: {
+        openapi: '3.0.0',
+        info: {
+            title: 'Bookstore API',
+            version: '1.0.0',
+            description: 'API for managing authors and books',
+        },
+        servers: [
+            {
+                url: `http://localhost:${process.env.PORT || 3000}`,
+            },
+        ],
+    },
+    apis: ['./src/index.ts'], // Adjust if needed (e.g., ['./index.ts'] if in root)
+};
+
+const swaggerSpec = swaggerJSDoc(swaggerOptions);
+
+// Serve Swagger UI
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+
+// Welcome Route
+/**
+ * @swagger
+ * /:
+ *   get:
+ *     summary: Welcome to the Bookstore API
+ *     description: Returns a welcome message with API details and available endpoints
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 version:
+ *                   type: string
+ *                 documentation:
+ *                   type: string
+ *                 endpoints:
+ *                   type: object
+ */
 app.get('/', (req: Request, res: Response) => {
     res.json({
         message: 'Welcome to the Bookstore API',
         version: '1.0.0',
-        documentation: 'API Documentation',
+        documentation: 'API Documentation at /api-docs',
         endpoints: {
             authors: {
                 get_all: 'GET /authors',
@@ -109,13 +160,74 @@ app.get('/', (req: Request, res: Response) => {
 // --- Author Routes ---
 const authorRoutes = express.Router();
 
-// Get all authors
+/**
+ * @swagger
+ * /authors:
+ *   get:
+ *     summary: Get all authors
+ *     description: Retrieve a list of all authors
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   name:
+ *                     type: string
+ *                   bio:
+ *                     type: string
+ *                   birthdate:
+ *                     type: string
+ *                     format: date
+ *       500:
+ *         description: Internal server error
+ */
 authorRoutes.get('/', asyncHandler(async (req: Request, res: Response) => {
     const authors = await db('authors').select('*');
     res.json(authors);
 }));
 
-// Get author by ID
+/**
+ * @swagger
+ * /authors/{id}:
+ *   get:
+ *     summary: Get author by ID
+ *     description: Retrieve a single author by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Author ID
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 name:
+ *                   type: string
+ *                 bio:
+ *                   type: string
+ *                 birthdate:
+ *                   type: string
+ *                   format: date
+ *       404:
+ *         description: Author not found
+ *       500:
+ *         description: Internal server error
+ */
 authorRoutes.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const author = await db('authors').where({ id: Number(id) }).first();
@@ -127,7 +239,51 @@ authorRoutes.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     res.json(author);
 }));
 
-// Create author
+/**
+ * @swagger
+ * /authors:
+ *   post:
+ *     summary: Create a new author
+ *     description: Create a new author with the provided details
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - birthdate
+ *             properties:
+ *               name:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               birthdate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       201:
+ *         description: Author created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 name:
+ *                   type: string
+ *                 bio:
+ *                   type: string
+ *                 birthdate:
+ *                   type: string
+ *                   format: date
+ *       400:
+ *         description: Invalid input
+ *       500:
+ *         description: Internal server error
+ */
 authorRoutes.post('/', validate([
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('birthdate').isISO8601().toDate().withMessage('Birthdate must be a valid date'),
@@ -140,7 +296,60 @@ authorRoutes.post('/', validate([
     res.status(201).json(author);
 }));
 
-// Update author
+/**
+ * @swagger
+ * /authors/{id}:
+ *   put:
+ *     summary: Update an author
+ *     description: Update an existing author's details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Author ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - birthdate
+ *             properties:
+ *               name:
+ *                 type: string
+ *               bio:
+ *                 type: string
+ *               birthdate:
+ *                 type: string
+ *                 format: date
+ *     responses:
+ *       200:
+ *         description: Author updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 name:
+ *                   type: string
+ *                 bio:
+ *                   type: string
+ *                 birthdate:
+ *                   type: string
+ *                   format: date
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Author not found
+ *       500:
+ *         description: Internal server error
+ */
 authorRoutes.put('/:id', validate([
     body('name').trim().notEmpty().withMessage('Name is required'),
     body('birthdate').isISO8601().toDate().withMessage('Birthdate must be a valid date'),
@@ -160,11 +369,32 @@ authorRoutes.put('/:id', validate([
     res.json(author);
 }));
 
-// Delete author
+/**
+ * @swagger
+ * /authors/{id}:
+ *   delete:
+ *     summary: Delete an author
+ *     description: Delete an author by their ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Author ID
+ *     responses:
+ *       204:
+ *         description: Author deleted successfully
+ *       400:
+ *         description: Cannot delete author with associated books
+ *       404:
+ *         description: Author not found
+ *       500:
+ *         description: Internal server error
+ */
 authorRoutes.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
-    // Check if author has books
     const books = await db('books').where({ author_id: Number(id) });
     if (books.length > 0) {
         throw new HttpError('Cannot delete author with associated books', 400);
@@ -179,7 +409,60 @@ authorRoutes.delete('/:id', asyncHandler(async (req: Request, res: Response) => 
     res.status(204).send();
 }));
 
-// Get author's books
+/**
+ * @swagger
+ * /authors/{id}/books:
+ *   get:
+ *     summary: Get books by author
+ *     description: Retrieve all books written by a specific author
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Author ID
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 author:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: integer
+ *                     name:
+ *                       type: string
+ *                     bio:
+ *                       type: string
+ *                     birthdate:
+ *                       type: string
+ *                       format: date
+ *                 books:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: integer
+ *                       title:
+ *                         type: string
+ *                       description:
+ *                         type: string
+ *                       published_date:
+ *                         type: string
+ *                         format: date
+ *                       author_id:
+ *                         type: integer
+ *       404:
+ *         description: Author not found
+ *       500:
+ *         description: Internal server error
+ */
 authorRoutes.get('/:id/books', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -195,7 +478,44 @@ authorRoutes.get('/:id/books', asyncHandler(async (req: Request, res: Response) 
 // --- Book Routes ---
 const bookRoutes = express.Router();
 
-// Get all books (with optional author filter)
+/**
+ * @swagger
+ * /books:
+ *   get:
+ *     summary: Get all books
+ *     description: Retrieve a list of all books, optionally filtered by author
+ *     parameters:
+ *       - in: query
+ *         name: author
+ *         schema:
+ *           type: integer
+ *         description: Author ID to filter books
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   id:
+ *                     type: integer
+ *                   title:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *                   published_date:
+ *                     type: string
+ *                     format: date
+ *                   author_id:
+ *                     type: integer
+ *                   author_name:
+ *                     type: string
+ *       500:
+ *         description: Internal server error
+ */
 bookRoutes.get('/', asyncHandler(async (req: Request, res: Response) => {
     const { author } = req.query;
 
@@ -211,7 +531,45 @@ bookRoutes.get('/', asyncHandler(async (req: Request, res: Response) => {
     res.json(books);
 }));
 
-// Get book by ID
+/**
+ * @swagger
+ * /books/{id}:
+ *   get:
+ *     summary: Get book by ID
+ *     description: Retrieve a single book by its ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Book ID
+ *     responses:
+ *       200:
+ *         description: Successful response
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 published_date:
+ *                   type: string
+ *                   format: date
+ *                 author_id:
+ *                   type: integer
+ *                 author_name:
+ *                   type: string
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Internal server error
+ */
 bookRoutes.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -228,7 +586,58 @@ bookRoutes.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     res.json(book);
 }));
 
-// Create book
+/**
+ * @swagger
+ * /books:
+ *   post:
+ *     summary: Create a new book
+ *     description: Create a new book with the provided details
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - published_date
+ *               - author_id
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               published_date:
+ *                 type: string
+ *                 format: date
+ *               author_id:
+ *                 type: integer
+ *     responses:
+ *       201:
+ *         description: Book created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 published_date:
+ *                   type: string
+ *                   format: date
+ *                 author_id:
+ *                   type: integer
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Author not found
+ *       500:
+ *         description: Internal server error
+ */
 bookRoutes.post('/', validate([
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('published_date').isISO8601().toDate().withMessage('Published date must be valid'),
@@ -236,7 +645,6 @@ bookRoutes.post('/', validate([
 ]), asyncHandler(async (req: Request, res: Response) => {
     const { title, description, published_date, author_id } = req.body;
 
-    // Check if author exists
     const author = await db('authors').where({ id: author_id }).first();
     if (!author) {
         throw new HttpError('Author not found', 404);
@@ -249,7 +657,65 @@ bookRoutes.post('/', validate([
     res.status(201).json(book);
 }));
 
-// Update book
+/**
+ * @swagger
+ * /books/{id}:
+ *   put:
+ *     summary: Update a book
+ *     description: Update an existing book's details
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Book ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - title
+ *               - published_date
+ *               - author_id
+ *             properties:
+ *               title:
+ *                 type: string
+ *               description:
+ *                 type: string
+ *               published_date:
+ *                 type: string
+ *                 format: date
+ *               author_id:
+ *                 type: integer
+ *     responses:
+ *       200:
+ *         description: Book updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 id:
+ *                   type: integer
+ *                 title:
+ *                   type: string
+ *                 description:
+ *                   type: string
+ *                 published_date:
+ *                   type: string
+ *                   format: date
+ *                 author_id:
+ *                   type: integer
+ *       400:
+ *         description: Invalid input
+ *       404:
+ *         description: Book or author not found
+ *       500:
+ *         description: Internal server error
+ */
 bookRoutes.put('/:id', validate([
     body('title').trim().notEmpty().withMessage('Title is required'),
     body('published_date').isISO8601().toDate().withMessage('Published date must be valid'),
@@ -258,7 +724,6 @@ bookRoutes.put('/:id', validate([
     const { id } = req.params;
     const { title, description, published_date, author_id } = req.body;
 
-    // Check if author exists
     const author = await db('authors').where({ id: author_id }).first();
     if (!author) {
         throw new HttpError('Author not found', 404);
@@ -276,7 +741,27 @@ bookRoutes.put('/:id', validate([
     res.json(book);
 }));
 
-// Delete book
+/**
+ * @swagger
+ * /books/{id}:
+ *   delete:
+ *     summary: Delete a book
+ *     description: Delete a book by its ID
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: Book ID
+ *     responses:
+ *       204:
+ *         description: Book deleted successfully
+ *       404:
+ *         description: Book not found
+ *       500:
+ *         description: Internal server error
+ */
 bookRoutes.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -293,24 +778,24 @@ bookRoutes.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
 app.use('/authors', authorRoutes);
 app.use('/books', bookRoutes);
 
-// Error handling middleware (must be after routes)
-app.use(errorHandler);
-
 // 404 handler
 app.use((req: Request, res: Response) => {
     res.status(404).json({ error: 'Not Found' });
 });
 
+// Error handling middleware (must be last)
+app.use(errorHandler);
+
 // Start server
 const port = process.env.PORT || 3000;
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
+    console.log(`Swagger UI available at http://localhost:${port}/api-docs`);
 });
 
 // Add proper error handling for unhandled promise rejections
 process.on('unhandledRejection', (reason, promise) => {
     console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-    // Application specific logging, throwing an error, or other logic here
 });
 
 export default app;
