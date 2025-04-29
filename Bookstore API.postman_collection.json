@@ -1,0 +1,332 @@
+{
+	"info": {
+		"_postman_id": "066eeb0e-c8cc-46b3-b2e5-bf81fbc22b0f",
+		"name": "Bookstore API",
+		"description": "## Welcome to the Bookstore API (version 1.0.0).\n\n**Endpoints:**\n\n**Authors:**\n\n- Get all authors: `GET /authors`\n    \n- Get one author: `GET /authors/:id`\n    \n- Create an author: `POST /authors`\n    \n- Update an author: `PUT /authors/:id`\n    \n- Delete an author: `DELETE /authors/:id`\n    \n- Get books by an author: `GET /authors/:id/books`\n    \n\n**Books:**\n\n- Get all books: `GET /books`\n    \n- Get all books by a specific author: `GET /books?author=:authorId`\n    \n- Get one book: `GET /books/:id`\n    \n- Create a book: `POST /books`\n    \n- Update a book: `PUT /books/:id`\n    \n- Delete a book: `DELETE /books/:id`",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "36489674",
+		"_collection_link": "https://www.postman.com/gazi2050/public-collection/collection/3c8q1ox/bookstore-api?action=share&source=collection_link&creator=36489674"
+	},
+	"item": [
+		{
+			"name": "authors_api",
+			"item": [
+				{
+					"name": "all_authors",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/authors",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"authors"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "single_author",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/authors/:id",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"authors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add_single_author",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/authors",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"authors"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update_single_author",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/authors/:id",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"authors",
+								":id"
+							],
+							"variable": [
+								{
+									"key": "id",
+									"value": ""
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete_single_author",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/authors/2",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"authors",
+								"2"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "books_api",
+			"item": [
+				{
+					"name": "all_books",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/books",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"books"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "single_book",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/books/1",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"books",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "books_by_author",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/books?author=1",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"books"
+							],
+							"query": [
+								{
+									"key": "author",
+									"value": "1"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "add_signle_book",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/books",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"books"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "update_single_book",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": " {\r\n        \"title\": \"java\",\r\n        \"description\": \"problem solving book for java developer\",\r\n        \"published_date\": \"2025-04-28T00:00:00.000Z\",\r\n        \"author_id\": 1,\r\n        \"author_name\": \"gazi\"\r\n    }",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/books/3",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"books",
+								"3"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "delete_single_book",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "https://bookstore-api-09.vercel.app/books/1",
+							"protocol": "https",
+							"host": [
+								"bookstore-api-09",
+								"vercel",
+								"app"
+							],
+							"path": [
+								"books",
+								"1"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
