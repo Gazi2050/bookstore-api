@@ -23,7 +23,6 @@ Create a `.env` file in the root directory:
 
 ```env
 DATABASE_URL=your_postgresql_connection_string
-PORT=3000
 ```
 
 Or copy the example file:
