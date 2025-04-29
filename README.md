@@ -119,3 +119,39 @@ Use the API with Postman:
 
 ### TypeScript Support
 - **@types/node**, **@types/express**, **@types/knex**
+
+## 📁 Project Structure
+```bash
+bookstore-api/
+├─] .env (ignored)
+├── .env.example
+├── .gitignore
+├── .prettierrc
+├─] .vercel/ (ignored)
+├─] dist/ (ignored)
+├── eslint.config.mjs
+├── knexfile.ts
+├── migrations/
+│   └── 20250428073748_create_authors_and_books_tables.ts
+├─] node_modules/ (ignored)
+├── package-lock.json
+├── package.json
+├── README.md
+├── src/
+│   ├── config/
+│   │   └── db.ts
+│   ├── index.ts
+│   ├── middleware/
+│   │   ├── errorHandler.ts
+│   │   └── validate.ts
+│   ├── routes/
+│   │   ├── authorRoutes.ts
+│   │   └── bookRoutes.ts
+│   ├── types/
+│   │   └── index.ts
+│   └── utils/
+│       ├── asyncHandler.ts
+│       └── httpError.ts
+├── tsconfig.json
+└── vercel.json
+```
