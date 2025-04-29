@@ -8,6 +8,7 @@ A simple, RESTful API for managing authors and books. Built using **Node.js**, *
 
 ```bash
 git clone https://github.com/Gazi2050/bookstore-api.git
+
 cd bookstore-api
 ```
 
@@ -128,6 +129,7 @@ bookstore-api/
 ├── .gitignore
 ├── .prettierrc
 ├─] .vercel/ (ignored)
+├── Bookstore API.postman_collection.json
 ├─] dist/ (ignored)
 ├── eslint.config.mjs
 ├── knexfile.ts
