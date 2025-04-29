@@ -2,6 +2,18 @@ import { ErrorRequestHandler } from 'express';
 import { ApiError } from '../types';
 import dotenv from 'dotenv';
 dotenv.config();
+
+/**
+ * Express error-handling middleware.
+ * Logs error details and sends a standardized JSON response.
+ *
+ * @function
+ * @param {Error} err - The error that occurred during request processing.
+ * @param {Request} req - Express request object.
+ * @param {Response} res - Express response object.
+ * @param {NextFunction} next - Express next middleware function.
+ * @returns {void}
+ */
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     console.error('Error Handler Invoked:');
     console.error('Error:', err.message);

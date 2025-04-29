@@ -7,11 +7,21 @@ import { HttpError } from '../utils/httpError';
 
 const router = express.Router();
 
+/**
+ * @route GET /authors
+ * @desc Retrieve all authors
+ * @access Public
+ */
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
     const authors = await db('authors').select('*');
     res.json(authors);
 }));
 
+/**
+ * @route GET /authors/:id
+ * @desc Retrieve a specific author by ID
+ * @access Public
+ */
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
     const author = await db('authors').where({ id: Number(id) }).first();
@@ -23,37 +33,60 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     res.json(author);
 }));
 
-router.post('/', validate([
-    body('name').trim().notEmpty().withMessage('Name is required'),
-    body('birthdate').isISO8601().toDate().withMessage('Birthdate must be a valid date'),
-]), asyncHandler(async (req: Request, res: Response) => {
-    const { name, bio, birthdate } = req.body;
-    const [author] = await db('authors')
-        .insert({ name, bio, birthdate })
-        .returning('*');
+/**
+ * @route POST /authors
+ * @desc Create a new author
+ * @access Public
+ */
+router.post(
+    '/',
+    validate([
+        body('name').trim().notEmpty().withMessage('Name is required'),
+        body('birthdate').isISO8601().toDate().withMessage('Birthdate must be a valid date'),
+    ]),
+    asyncHandler(async (req: Request, res: Response) => {
+        const { name, bio, birthdate } = req.body;
+        const [author] = await db('authors')
+            .insert({ name, bio, birthdate })
+            .returning('*');
 
-    res.status(201).json(author);
-}));
+        res.status(201).json(author);
+    })
+);
 
-router.put('/:id', validate([
-    body('name').trim().notEmpty().withMessage('Name is required'),
-    body('birthdate').isISO8601().toDate().withMessage('Birthdate must be a valid date'),
-]), asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { name, bio, birthdate } = req.body;
+/**
+ * @route PUT /authors/:id
+ * @desc Update an existing author
+ * @access Public
+ */
+router.put(
+    '/:id',
+    validate([
+        body('name').trim().notEmpty().withMessage('Name is required'),
+        body('birthdate').isISO8601().toDate().withMessage('Birthdate must be a valid date'),
+    ]),
+    asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const { name, bio, birthdate } = req.body;
 
-    const [author] = await db('authors')
-        .where({ id: Number(id) })
-        .update({ name, bio, birthdate })
-        .returning('*');
+        const [author] = await db('authors')
+            .where({ id: Number(id) })
+            .update({ name, bio, birthdate })
+            .returning('*');
 
-    if (!author) {
-        throw new HttpError('Author not found', 404);
-    }
+        if (!author) {
+            throw new HttpError('Author not found', 404);
+        }
 
-    res.json(author);
-}));
+        res.json(author);
+    })
+);
 
+/**
+ * @route DELETE /authors/:id
+ * @desc Delete an author, only if they have no associated books
+ * @access Public
+ */
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -71,6 +104,11 @@ router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     res.status(204).send();
 }));
 
+/**
+ * @route GET /authors/:id/books
+ * @desc Retrieve all books for a specific author
+ * @access Public
+ */
 router.get('/:id/books', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 

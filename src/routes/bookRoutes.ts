@@ -7,6 +7,11 @@ import { HttpError } from '../utils/httpError';
 
 const router = express.Router();
 
+/**
+ * @route GET /books
+ * @desc Retrieve all books, optionally filtered by author ID
+ * @access Public
+ */
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
     const { author } = req.query;
 
@@ -22,6 +27,11 @@ router.get('/', asyncHandler(async (req: Request, res: Response) => {
     res.json(books);
 }));
 
+/**
+ * @route GET /books/:id
+ * @desc Retrieve a specific book by ID
+ * @access Public
+ */
 router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
@@ -38,50 +48,73 @@ router.get('/:id', asyncHandler(async (req: Request, res: Response) => {
     res.json(book);
 }));
 
-router.post('/', validate([
-    body('title').trim().notEmpty().withMessage('Title is required'),
-    body('published_date').isISO8601().toDate().withMessage('Published date must be valid'),
-    body('author_id').isInt().withMessage('Author ID must be an integer'),
-]), asyncHandler(async (req: Request, res: Response) => {
-    const { title, description, published_date, author_id } = req.body;
+/**
+ * @route POST /books
+ * @desc Create a new book
+ * @access Public
+ */
+router.post(
+    '/',
+    validate([
+        body('title').trim().notEmpty().withMessage('Title is required'),
+        body('published_date').isISO8601().toDate().withMessage('Published date must be valid'),
+        body('author_id').isInt().withMessage('Author ID must be an integer'),
+    ]),
+    asyncHandler(async (req: Request, res: Response) => {
+        const { title, description, published_date, author_id } = req.body;
 
-    const author = await db('authors').where({ id: author_id }).first();
-    if (!author) {
-        throw new HttpError('Author not found', 404);
-    }
+        const author = await db('authors').where({ id: author_id }).first();
+        if (!author) {
+            throw new HttpError('Author not found', 404);
+        }
 
-    const [book] = await db('books')
-        .insert({ title, description, published_date, author_id })
-        .returning('*');
+        const [book] = await db('books')
+            .insert({ title, description, published_date, author_id })
+            .returning('*');
 
-    res.status(201).json(book);
-}));
+        res.status(201).json(book);
+    })
+);
 
-router.put('/:id', validate([
-    body('title').trim().notEmpty().withMessage('Title is required'),
-    body('published_date').isISO8601().toDate().withMessage('Published date must be valid'),
-    body('author_id').isInt().withMessage('Author ID must be an integer'),
-]), asyncHandler(async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const { title, description, published_date, author_id } = req.body;
+/**
+ * @route PUT /books/:id
+ * @desc Update an existing book
+ * @access Public
+ */
+router.put(
+    '/:id',
+    validate([
+        body('title').trim().notEmpty().withMessage('Title is required'),
+        body('published_date').isISO8601().toDate().withMessage('Published date must be valid'),
+        body('author_id').isInt().withMessage('Author ID must be an integer'),
+    ]),
+    asyncHandler(async (req: Request, res: Response) => {
+        const { id } = req.params;
+        const { title, description, published_date, author_id } = req.body;
 
-    const author = await db('authors').where({ id: author_id }).first();
-    if (!author) {
-        throw new HttpError('Author not found', 404);
-    }
+        const author = await db('authors').where({ id: author_id }).first();
+        if (!author) {
+            throw new HttpError('Author not found', 404);
+        }
 
-    const [book] = await db('books')
-        .where({ id: Number(id) })
-        .update({ title, description, published_date, author_id })
-        .returning('*');
+        const [book] = await db('books')
+            .where({ id: Number(id) })
+            .update({ title, description, published_date, author_id })
+            .returning('*');
 
-    if (!book) {
-        throw new HttpError('Book not found', 404);
-    }
+        if (!book) {
+            throw new HttpError('Book not found', 404);
+        }
 
-    res.json(book);
-}));
+        res.json(book);
+    })
+);
 
+/**
+ * @route DELETE /books/:id
+ * @desc Delete a book by ID
+ * @access Public
+ */
 router.delete('/:id', asyncHandler(async (req: Request, res: Response) => {
     const { id } = req.params;
 
