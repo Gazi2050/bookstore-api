@@ -1,6 +1,7 @@
 import { ErrorRequestHandler } from 'express';
 import { ApiError } from '../types';
-
+import dotenv from 'dotenv';
+dotenv.config();
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     console.error('Error Handler Invoked:');
     console.error('Error:', err.message);
